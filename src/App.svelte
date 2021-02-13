@@ -37,7 +37,7 @@
 
 <main>
 	{#if user}
-		<Notes />
+		<Notes uid={user.uid} />
 	{:else}
 		<h1>Logue para ver suas informações</h1>
 	{/if}

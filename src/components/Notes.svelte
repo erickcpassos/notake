@@ -7,6 +7,12 @@
 
 	export let uid;
 
+	let isUpdateFormActive = false;
+	let isAddFormActive = false;
+	let noteTitle = "";
+	let noteContent = "";
+	let currentNoteId = "";
+
 	const noteListRef = db
 		.collection("users")
 		.doc(uid)
@@ -15,8 +21,17 @@
 
 	const notes = collectionData(noteListRef, "id").pipe(startWith([]));
 
-	let noteTitle = "";
-	let noteContent = "";
+	// FUNCTIONS
+
+	function showAddForm() {
+		isAddFormActive = true;
+	}
+
+	function hideAddForm() {
+		noteTitle = "";
+		noteContent = "";
+		isAddFormActive = false;
+	}
 
 	function addNote(event) {
 		event.preventDefault();
@@ -27,31 +42,53 @@
 			content: noteContent,
 			createdAt: Date.now(),
 		});
+
 		noteTitle = "";
 		noteContent = "";
-		isFormActive = false;
+		isAddFormActive = false;
 	}
 
-	let isFormActive = false;
+	function updateNote(event) {
+		event.preventDefault();
+		if (!noteTitle.trim() || !noteContent.trim()) return;
 
-	function showForm() {
-		isFormActive = true;
-	}
+		db.collection("users")
+			.doc(uid)
+			.collection("notes")
+			.doc(currentNoteId)
+			.update({
+				title: noteTitle,
+				content: noteContent,
+			});
 
-	function hideForm() {
-		const form = document.querySelector("#add-note");
 		noteTitle = "";
 		noteContent = "";
-		isFormActive = false;
+		currentNoteId = "";
+		isUpdateFormActive = false;
+	}
+
+	function showUpdateForm(event) {
+		const { id, title, content } = event.detail;
+		noteTitle = title;
+		noteContent = content;
+		currentNoteId = id;
+		isUpdateFormActive = true;
+	}
+
+	function hideUpdateForm() {
+		noteTitle = "";
+		noteContent = "";
+		isUpdateFormActive = false;
 	}
 
 	function removeItem(event) {
-		alert(event.detail.id);
+		const { id } = event.detail;
+		db.doc(`users/${uid}/notes/${id}`).delete();
 	}
 </script>
 
 <section id="app">
-	{#if isFormActive}
+	{#if isAddFormActive}
 		<div transition:fade={{ duration: 200 }} id="add-note">
 			<form id="add-note-form" autocomplete="off" on:submit={addNote}>
 				<label for="title">
@@ -64,7 +101,7 @@
 				</label>
 
 				<div id="buttons">
-					<button id="close-form" class="btn-white" on:click={hideForm}
+					<button id="close-form" class="btn-white" on:click={hideAddForm}
 						>Cancelar</button
 					>
 					<button id="submit-form" type="submit" class="btn-white"
@@ -75,19 +112,46 @@
 		</div>
 	{/if}
 
+	{#if isUpdateFormActive}
+		<div transition:fade={{ duration: 200 }} id="update-note">
+			<form id="update-note-form" autocomplete="off" on:submit={updateNote}>
+				<label for="title">
+					Title
+					<input id="title" name="title" type="text" bind:value={noteTitle} />
+				</label>
+				<label for="content">
+					Content
+					<textarea id="content" name="content" bind:value={noteContent} />
+				</label>
+
+				<div id="buttons">
+					<button id="close-form" class="btn-white" on:click={hideUpdateForm}
+						>Cancelar</button
+					>
+					<button id="submit-form" type="submit" class="btn-white"
+						>Editar</button
+					>
+				</div>
+			</form>
+		</div>
+	{/if}
+
 	<h2 id="section-title">Suas Notas</h2>
 
-	<button id="add-btn" class="btn-white" on:click={showForm}>Criar Nota</button>
+	<button id="add-btn" class="btn-white" on:click={showAddForm}
+		>Criar Nota</button
+	>
 
 	<div id="notes-container">
 		{#each $notes as note}
-			<Note on:remove={removeItem} {...note} />
+			<Note on:update={showUpdateForm} on:remove={removeItem} {...note} />
 		{/each}
 	</div>
 </section>
 
 <style>
-	#add-note {
+	#add-note,
+	#update-note {
 		width: 100%;
 		height: 100%;
 		position: fixed;
@@ -100,7 +164,8 @@
 		justify-content: center;
 	}
 
-	#add-note-form {
+	#add-note-form,
+	#update-note-form {
 		background-color: white;
 		border-radius: 10px;
 		padding: 2rem;

@@ -1,38 +1,45 @@
 <script>
 	import { createEventDispatcher } from "svelte";
 	const dispatch = createEventDispatcher();
+	import { fade } from "svelte/transition";
+
+	// VARIABLES
 
 	export let id;
 	export let title;
 	export let createdAt;
 	export let content;
 
+	// FUNCTIONS
+
+	function formatDate(timestamp) {
+		const date = new Date(timestamp);
+		const formattedDate =
+			date.getDate() + "/" + date.getMonth() + "/" + date.getFullYear();
+		return formattedDate;
+	}
+
 	function remove() {
 		dispatch("remove", { id });
 	}
 
-	function restrictText(text) {
-		if (text.length < 150) {
-			return text;
-		}
-
-		const newText = text.substring(0, 150) + "...";
-		return newText;
+	function update() {
+		dispatch("update", { id, title, content });
 	}
 </script>
 
-<div class="note">
+<div transition:fade={{ duration: 200 }} class="note">
 	<div class="note-header">
 		<h3 class="title">{title}</h3>
-		<p class="created-at">Criado em {createdAt}</p>
+		<p class="created-at">Criado em {formatDate(createdAt)}</p>
 		<div id="icons">
 			<i on:click={remove} id="delete" class="fas fa-trash" />
-			<i id="edit" class="fas fa-pencil-alt" />
+			<i on:click={update} id="update" class="fas fa-pencil-alt" />
 		</div>
 	</div>
 	<div class="note-body">
 		<p class="content">
-			{restrictText(content)}
+			{content}
 		</p>
 	</div>
 </div>
@@ -46,6 +53,8 @@
 		margin: 0.5rem;
 		box-shadow: 0px 3px 8px rgb(184, 184, 184);
 		cursor: pointer;
+		min-width: 250px;
+		min-height: 150px;
 	}
 
 	.note-header {
@@ -58,6 +67,7 @@
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		font-weight: bold;
+		margin-right: 2rem;
 	}
 
 	.created-at {
@@ -74,6 +84,9 @@
 	.content {
 		font-size: 0.8rem;
 		line-height: 1.3rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	#icons {
