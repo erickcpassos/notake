@@ -1,5 +1,6 @@
 <script>
 	import Note from "./Note.svelte";
+	import FullNote from "./FullNote.svelte";
 	import { fade } from "svelte/transition";
 	import { db } from "../firebase";
 	import { collectionData } from "rxfire/firestore";
@@ -7,6 +8,8 @@
 
 	export let uid;
 
+	let noteData = {};
+	let isFullNoteShown = false;
 	let isUpdateFormActive = false;
 	let isAddFormActive = false;
 	let noteTitle = "";
@@ -85,6 +88,16 @@
 		const { id } = event.detail;
 		db.doc(`users/${uid}/notes/${id}`).delete();
 	}
+
+	function showFullNote(event) {
+		noteData = event.detail;
+		isFullNoteShown = true;
+	}
+
+	function hideFullNote() {
+		noteData = {};
+		isFullNoteShown = false;
+	}
 </script>
 
 <section id="app">
@@ -136,6 +149,10 @@
 		</div>
 	{/if}
 
+	{#if isFullNoteShown}
+		<FullNote {...noteData} on:hide={hideFullNote} />
+	{/if}
+
 	<h2 id="section-title">Suas Notas</h2>
 
 	<button id="add-btn" class="btn-white" on:click={showAddForm}
@@ -144,7 +161,12 @@
 
 	<div id="notes-container">
 		{#each $notes as note}
-			<Note on:update={showUpdateForm} on:remove={removeItem} {...note} />
+			<Note
+				on:expand={showFullNote}
+				on:update={showUpdateForm}
+				on:remove={removeItem}
+				{...note}
+			/>
 		{/each}
 	</div>
 </section>

@@ -8,7 +8,9 @@
 
 :root {
 	--primary-blue: #5473f0;
+
 	--secondary-blue: #a3b5ff;
+	--terciary-blue: #1d38a5;
 }
 
 .btn-blue {

@@ -26,9 +26,13 @@
 	function update() {
 		dispatch("update", { id, title, content });
 	}
+
+	function expand() {
+		dispatch("expand", { id, title, content, createdAt });
+	}
 </script>
 
-<div transition:fade={{ duration: 200 }} class="note">
+<div transition:fade={{ duration: 200 }} class="note" on:click={expand}>
 	<div class="note-header">
 		<h3 class="title">{title}</h3>
 		<p class="created-at">Criado em {formatDate(createdAt)}</p>
@@ -67,7 +71,7 @@
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		font-weight: bold;
-		margin-right: 2rem;
+		margin-right: 3rem;
 	}
 
 	.created-at {
